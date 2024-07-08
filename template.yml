@@ -1,0 +1,567 @@
+# IaC Django Serverless Starter for AWS
+# Copyright (C) 2024 Efficient Solutions LLC
+#
+# GitHub Repository
+# https://github.com/efficient-solutions/aws-iac-django-serverless-starter
+#
+# This software is released under the GNU GPLv3 license
+# https://www.gnu.org/licenses/gpl-3.0.html
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
+Description: >
+  A CloudFormation/SAM template to deploy a Django application on AWS utilizing a fully serverless architecture.
+
+Parameters:
+  ProjectId:
+    Description: "Project ID"
+    Type: String
+    Default: aws-iac-django-serverless-starter
+    AllowedPattern: "^[a-zA-Z0-9-]+$"
+    ConstraintDescription: "Project ID must be alphanumeric and may contain hyphens."
+
+  Environment:
+    Description: "Environment"
+    Type: String
+    Default: DEV
+    AllowedValues:
+      - DEV
+    ConstraintDescription: "Supported environments: DEV."
+
+  SecretKey:
+    Description: >
+      Secret key for hashing and signing.
+      For development purposes only. In production, the secret key must be generated, stored, and retrieved securely.
+    Type: String
+    Default: "00000000000000000000000000000000000000000000000000"
+    MinLength: 50
+    MaxLength: 200
+
+  LambdaRuntime:
+    Description: "Lambda runtime"
+    Type: String
+    Default: python3.12
+    AllowedValues:
+      - python3.12
+    ConstraintDescription: "Supported Lambda function runtimes: python3.12."
+
+  LambdaMemorySize:
+    Description: "Memory size for Lambda function"
+    Type: Number
+    Default: 2048
+    MinValue: 512
+    MaxValue: 10240
+
+  LambdaTimeout:
+    Description: >
+      Timeout for Lambda function in seconds; must be below 29 seconds which is the timeout of the HTTP API"
+    Type: Number
+    Default: 28
+    MinValue: 5
+    MaxValue: 28
+
+  LambdaArchitecture:
+    Description: "Lambda function architecture"
+    Type: String
+    Default: arm64
+    AllowedValues:
+      - x86
+      - arm64
+    ConstraintDescription: "Supported lambda function architectures: x86, arm64."
+
+  LambdaMountedFileSystemPath:
+    Description: "Path to mounted file system"
+    Type: String
+    Default: /mnt/fs
+
+  LogGroupsRetentionPeriod:
+    Description: "Retention period for log groups, in days"
+    Type: Number
+    Default: 180
+    AllowedValues:
+      - 1
+      - 3
+      - 5
+      - 7
+      - 14
+      - 30
+      - 60
+      - 90
+      - 120
+      - 150
+      - 180
+      - 365
+      - 400
+      - 545
+      - 731
+      - 1096
+      - 1827
+      - 2192
+      - 2557
+      - 2922
+      - 3288
+      - 3653
+    ConstraintDescription: "Supported log group retention periods: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653."
+
+  HttpApiRateLimit:
+    Description: "Rate limit for HTTP API"
+    Type: Number
+    Default: 10
+    MinValue: 1
+    MaxValue: 1000
+
+  HttpApiBurstLimit:
+    Description: "Burst limit for HTTP API"
+    Type: Number
+    Default: 20
+    MinValue: 1
+    MaxValue: 1000
+
+  VpcCidrBlock:
+    Description: >
+      CIDR block for VPC; 192.168.0.0/16 — up to 65,534 usable IPs
+      RFC 1918: http://www.faqs.org/rfcs/rfc1918.html
+      IP Subnet Calculator: https://www.calculator.net/ip-subnet-calculator.html
+    Type: String
+    Default: "192.168.0.0/16"
+    AllowedPattern: "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([1-9]|[1-2][0-9]|3[0-2]))$"
+    ConstraintDescription: "VPC CIDR block must be a valid IPv4 CIDR block from the private IPv4 address ranges as specified in RFC 1918 (e.g., 192.168.0.0/16)."
+
+Mappings:
+  FunctionMaps:
+    # Mappings attributes can contain only alphanumeric characters; use Mappings
+    # as a workaround by replacing x86_64 with x86
+    FunctionArchitecture:
+      # These values are used to define function's architecture
+      x86: x86_64
+      arm64: arm64
+    WebAdapterLayerArchitecture:
+      # These values are used to define web adapter layer's architecture
+      # https://github.com/awslabs/aws-lambda-web-adapter
+      x86: X86
+      arm64: Arm64
+
+Resources:
+  Vpc:  # Virtual private cloud
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsHostnames: True
+      EnableDnsSupport: True
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: EC2
+        - Key: ResourceType
+          Value: VPC
+  
+  VpcRouteTable:  # Route table for VPC
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: EC2
+        - Key: ResourceType
+          Value: RouteTable
+
+  VpcSubnet0:  # First subnet for VPC
+    Type: AWS::EC2::Subnet
+    Properties:
+      # Cidr function format: !Cidr [ipBlock, count, cidrBits]
+      # Subnet bits is the inverse of the subnet mask. To calculate the required host bits
+      # for a given subnet bits, subtract the subnet bits from 32 for IPv4 or 128 for IPv6.
+      # The cidrBits of 14 corresponds to subnet /19 (16,384 usable IPs).
+      CidrBlock: !Select [0, !Cidr [!Ref VpcCidrBlock, 3, 14]]
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: EC2
+        - Key: ResourceType
+          Value: Subnet
+
+  VpcSubnet1:  # Second subnet for VPC
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Select [1, !Cidr [!Ref VpcCidrBlock, 3, 14]]
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: EC2
+        - Key: ResourceType
+          Value: Subnet
+
+  VpcSubnet2:  # Third subnet for VPC
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Select [2, !Cidr [!Ref VpcCidrBlock, 3, 14]]
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [2, !GetAZs ""]
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: EC2
+        - Key: ResourceType
+          Value: Subnet
+
+  VpcSubnet0RouteTableAssociation:  # First subnet route table association
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref VpcSubnet0
+      RouteTableId: !Ref VpcRouteTable
+
+  VpcSubnet1RouteTableAssociation:  # Second subnet route table association
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref VpcSubnet1
+      RouteTableId: !Ref VpcRouteTable
+
+  VpcSubnet2RouteTableAssociation:  # Third subnet route table association"
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref VpcSubnet2
+      RouteTableId: !Ref VpcRouteTable
+
+  FileSystem:  # EFS file system
+    Type: AWS::EFS::FileSystem
+    # DeletionPolicy attribute
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
+    DeletionPolicy: Delete
+    # UpdateReplacePolicy attribute
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
+    UpdateReplacePolicy: Delete
+    Properties:
+      PerformanceMode: generalPurpose
+      Encrypted: true
+      FileSystemPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "elasticfilesystem:ClientMount"
+            Principal:
+              AWS: "*"
+      FileSystemTags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: EFS
+        - Key: ResourceType
+          Value: FileSystem
+
+  FileSystemMountTarget0:  # First mount target for EFS
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref VpcSubnet0
+      SecurityGroups:
+        - !GetAtt Vpc.DefaultSecurityGroup
+
+  FileSystemMountTarget1:  # Second mount target for EFS"
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref VpcSubnet1
+      SecurityGroups:
+        - !GetAtt Vpc.DefaultSecurityGroup
+
+  FileSystemMountTarget2:  # Third mount target for EFS
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref VpcSubnet2
+      SecurityGroups:
+        - !GetAtt Vpc.DefaultSecurityGroup
+
+  FileSystemAccessPoint:  # EFS access point
+    Type: AWS::EFS::AccessPoint
+    # All mount targets must be listed here otherwise Lambda creation will fail.
+    # These dependencies can be added to the Lambda itself instead but it is easier
+    # to manage them here in case of multiple Lambda functions.
+    DependsOn:
+      - FileSystemMountTarget0
+      - FileSystemMountTarget1
+      - FileSystemMountTarget2
+    Properties:
+      FileSystemId: !Ref FileSystem
+      PosixUser:
+        Uid: "1000"
+        Gid: "1000"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "0777"
+        Path: "/lambda"
+      AccessPointTags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: EFS
+        - Key: ResourceType
+          Value: AccessPoint
+
+  HttpApiLogGroup:  # HTTP API log group
+    Type: AWS::Logs::LogGroup
+    # DeletionPolicy attribute
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
+    DeletionPolicy: Delete
+    # UpdateReplacePolicy attribute
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupClass: STANDARD
+      RetentionInDays: !Ref LogGroupsRetentionPeriod
+      LogGroupName: !Sub "/aws/api-gateway/${AWS::StackName}-HttpApi-${HttpApi}"
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: Logs
+        - Key: ResourceType
+          Value: LogGroup
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Description: "HTTP API"
+    Properties:
+      Description: !Sub 'HTTP API for ${ProjectId} (${Environment})'
+      DisableExecuteApiEndpoint: false
+      FailOnWarnings: false
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: !Ref HttpApiBurstLimit
+        ThrottlingRateLimit: !Ref HttpApiRateLimit
+      AccessLogSettings:
+        DestinationArn: !GetAtt HttpApiLogGroup.Arn
+        # The Missing Guide to AWS API Gateway Access Logs
+        # https://www.alexdebrie.com/posts/api-gateway-access-logs/
+        Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","routeKey":"$context.routeKey","status":$context.status,"responseLatency":$context.responseLatency,"integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"}'
+      Tags:
+        ProjectId: !Ref ProjectId
+        Environment: !Ref Environment
+        ResourceGroup: Serverless
+        ResourceType: HttpApi
+  
+  FunctionExecutionRole:  # Lambda execution role
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: LogsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+        - PolicyName: VpcPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                Resource: "*"
+        - PolicyName: EfsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - elasticfilesystem:ClientMount
+                  - elasticfilesystem:ClientRootAccess
+                  - elasticfilesystem:ClientWrite
+                  - elasticfilesystem:DescribeMountTargets
+                Resource: "*"
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: Serverless
+        - Key: ResourceType
+          Value: HttpApi
+
+  FunctionLogGroup:  # Explicit log group that refers to the Lambda function (https://awslabs.github.io/serverless-rules/rules/lambda/log_retention/)
+    Type: AWS::Logs::LogGroup
+    # DeletionPolicy attribute
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html
+    DeletionPolicy: Delete
+    # UpdateReplacePolicy attribute
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-attribute-updatereplacepolicy.html
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupClass: STANDARD
+      LogGroupName: !Sub "/aws/lambda/${Function}"
+      RetentionInDays: !Ref LogGroupsRetentionPeriod
+      Tags:
+        - Key: ProjectId
+          Value: !Ref ProjectId
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ResourceGroup
+          Value: Logs
+        - Key: ResourceType
+          Value: LogGroup
+
+  Function:
+    Type: AWS::Serverless::Function
+    Description: "Lambda function"
+    Properties:
+      Layers:
+        # Add the AWS Lambda Web Adapter layer with the corresponding architecture
+        # https://github.com/awslabs/aws-lambda-web-adapter
+        - !Sub 
+          - "arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayer${Architecture}:22"
+          - Architecture: !FindInMap [FunctionMaps, WebAdapterLayerArchitecture, !Ref LambdaArchitecture]
+      CodeUri: src/
+      # The AWS Lambda Web Adapter wrapper script set in AWS_LAMBDA_EXEC_WRAPPER will execute
+      # this handler script to boot up the application
+      Handler: launch.sh
+      # Handler: lambda_function.lambda_handler
+      Role: !GetAtt FunctionExecutionRole.Arn
+      Architectures:
+        - !FindInMap [FunctionMaps, FunctionArchitecture, !Ref LambdaArchitecture]
+      Runtime: !Ref LambdaRuntime
+      MemorySize: !Ref LambdaMemorySize
+      Timeout: !Ref LambdaTimeout
+      Environment:
+        Variables:
+          # Application variables
+          ENVIRONMENT: !Ref Environment  # Current environment
+          MOUNTED_FILE_SYSTEM_PATH: !Ref LambdaMountedFileSystemPath  # Path to EFS
+          SECRET_KEY: !Ref SecretKey
+          # AWS Lambda Web Adapter variables
+          # https://github.com/awslabs/aws-lambda-web-adapter
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/bootstrap  # Wrapper script
+          # When a new Lambda Execution Environment starts up, Lambda Web Adapter will send
+          # an HTTP GET request to the following path and expects it to be successful.
+          #
+          # This can be any path however it shouldn't perform any database queries because
+          # the database might not be initialized yet which would cause the readiness check
+          # to fail.
+          AWS_LWA_READINESS_CHECK_PATH: /events
+          AWS_LWA_PORT: 8080  # Traffic port
+          # The path for receiving event payloads that are passed through from non-http triggers
+          AWS_LWA_PASS_THROUGH_PATH: /events 
+      VpcConfig:
+        # Use the !Split function to split a comma-separated string into an array
+        SecurityGroupIds: !Split [",", !GetAtt Vpc.DefaultSecurityGroup]
+        SubnetIds:
+          - !Ref VpcSubnet0
+          - !Ref VpcSubnet1
+          - !Ref VpcSubnet2
+      FileSystemConfigs:
+        - Arn: !GetAtt FileSystemAccessPoint.Arn
+          LocalMountPath: !Ref LambdaMountedFileSystemPath
+      Events:
+        # HTTP API
+        # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-function-httpapi.html
+        ApiEdnpoint:
+          Type: HttpApi
+          Properties:
+            # If no Path and Method are specified, SAM will create a default API
+            # path that routes any request that doesn't map to a different endpoint
+            # to this Lambda function.
+            ApiId: !Ref HttpApi
+            TimeoutInMillis: 29000  # Set the maximum value: 29 seconds
+      Tags:
+        ProjectId: !Ref ProjectId
+        Environment: !Ref Environment
+        ResourceGroup: Serverless
+        ResourceType: Function
+
+Outputs:
+  VpcId:
+    Description: The ID of the VPC
+    Value: !Ref Vpc
+
+  VpcCidrBlock:
+    Description: The CIDR block of the VPC
+    Value: !Ref VpcCidrBlock
+
+  VpcSubnet0Id:
+    Description: The ID of the first subnet
+    Value: !Ref VpcSubnet0
+
+  VpcSubnet1Id:
+    Description: The ID of the second subnet  
+    Value: !Ref VpcSubnet1
+
+  VpcSubnet2Id:
+    Description: The ID of the third subnet
+    Value: !Ref VpcSubnet2
+
+  FileSystemId:
+    Description: The ID of the EFS file system
+    Value: !Ref FileSystem
+
+  FileSystemAccessPointId:
+    Description: The ID of the EFS access point
+    Value: !Ref FileSystemAccessPoint
+
+  HttpApiLogGroupArn:
+    Description: The ARN of the HTTP API log group
+    Value: !GetAtt HttpApiLogGroup.Arn
+
+  HttpApiId:
+    Description: The ID of the HTTP API
+    Value: !Ref HttpApi
+
+  HttpApiUrl:
+    Description: The invoke URL for the HTTP API
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/"
+
+  FunctionArn:
+    Description: The ARN of the Lambda function
+    Value: !GetAtt Function.Arn
+
+  FunctionName:
+    Description: The name of the Lambda function
+    Value: !Ref Function
+
+  FunctionLogGroupArn:
+    Description: The ARN of the Lambda function log group
+    Value: !GetAtt FunctionLogGroup.Arn

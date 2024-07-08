@@ -1,0 +1,5 @@
+.DS_Store
+.aws-sam
+samconfig.toml
+.database
+*.pyc

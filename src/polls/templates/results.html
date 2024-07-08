@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ question.question_text }}{% endblock %}
+
+{% block header %}{{ question.question_text }}{% endblock %}
+
+{% block content %}
+    <ul class="list-group">
+        {% for choice in question.choice_set.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ choice.choice_text }}
+                <span class="badge text-bg-primary rounded-pill">{{ choice.votes }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+    
+    <p class="pt-4"><a href="{% url 'polls:index' %}">Main page</a> | <a href="{% url 'polls:detail' question.id %}">Vote again</a></p>
+{% endblock %}

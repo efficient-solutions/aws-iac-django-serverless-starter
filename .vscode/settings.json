@@ -1,0 +1,9 @@
+{
+    "aws.telemetry": false,
+    // Pylint extension for Visual Studio Code
+    // https://marketplace.visualstudio.com/items?itemName=ms-python.pylint
+    "pylint.args": [
+        "--disable=E0307",
+        "--disable=E1101"
+    ]
+}

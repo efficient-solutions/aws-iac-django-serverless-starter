@@ -1,0 +1,58 @@
+// Format details: https://aka.ms/devcontainer.json
+// For config options: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "aws-iac-django-serverless-starter",
+
+	// Use a Dockerfile; more info: https://containers.dev/guide/dockerfile
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": "..",
+		"args": { 
+			// Update 'VARIANT' to pick a Python version.
+			// Append -bullseye or -buster to pin to an OS version.
+			// Use -bullseye variants on local arm64/Apple Silicon.
+			"VARIANT": "3.12-bullseye"
+		}
+	},
+
+	"runArgs": [
+		// Set the environment variables
+		"--env-file", ".devcontainer/devcontainer.env"
+	],
+
+	// Features to add to the dev container; more info: https://containers.dev/features
+	"features": {
+		// Install AWS CLI
+		// https://github.com/devcontainers/features/tree/main/src/aws-cli
+		"ghcr.io/devcontainers/features/aws-cli:1": {},
+		// Install AWS SAM CLI
+		// https://github.com/efficient-solutions/dev-containers-features
+		"ghcr.io/efficient-solutions/dev-containers-features/aws-sam-cli:1": {}
+	},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "pip3 install --user -r requirements.txt",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			// Set *default* container specific settings.json values on container create.
+			"settings": {},
+			
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-python.python",
+				"ms-python.pylint",
+				"ms-python.vscode-pylance",
+				"kddejong.vscode-cfn-lint"
+			]
+		}
+	},
+
+	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root
+	"remoteUser": "vscode"
+}
