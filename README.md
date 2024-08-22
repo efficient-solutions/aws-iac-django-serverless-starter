@@ -39,6 +39,11 @@ The architecture consists of the following services:
 6. [AWS SAM](https://aws.amazon.com/serverless/sam/)
 7. [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/)
 
+
+### Diagram
+
+![Architectural diagram](./img/diagram.svg)
+
 ### Database
 
 The SQLite database file is stored on EFS, which is automatically mounted to every launched Lambda function.
