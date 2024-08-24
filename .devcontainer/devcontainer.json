@@ -33,8 +33,8 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "pip3 install --user -r requirements.txt",
+	// Create the SQLite file and its parent directory once the container is created.
+	"postCreateCommand": "mkdir -p .database && touch .database/db.sqlite3",
 
 	// Configure tool-specific properties.
 	"customizations": {

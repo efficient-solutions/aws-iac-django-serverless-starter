@@ -83,6 +83,8 @@ WSGI_APPLICATION = "project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
+        # If you change the path to the SQLite file in the LOCAL environment, update it
+        # also in the "postCreateCommand" command in ".devcontainer/devcontainer.json".
         "NAME": os.path.join(BASE_DIR.parent, ".database", "db.sqlite3"),
     }
 }
