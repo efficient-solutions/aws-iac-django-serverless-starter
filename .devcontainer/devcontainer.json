@@ -36,6 +36,11 @@
 	// Create the SQLite file and its parent directory once the container is created.
 	"postCreateCommand": "mkdir -p .database && touch .database/db.sqlite3",
 
+	// Add the src directory to PYTHONPATH.
+	"remoteEnv": {
+		"PYTHONPATH": "${containerWorkspaceFolder}/src"
+	},
+
 	// Configure tool-specific properties.
 	"customizations": {
 		// Configure properties specific to VS Code.
