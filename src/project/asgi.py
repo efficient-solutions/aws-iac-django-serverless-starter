@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
 
 import os
 
+from django.conf import settings
 from django.core.asgi import get_asgi_application
 
 from blacknoise import BlackNoise
@@ -20,6 +21,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
 application = BlackNoise(get_asgi_application())
 # Add the static path
 application.add(
-    os.path.join(os.environ.get("MOUNTED_FILE_SYSTEM_PATH"), "staticfiles"),
+    settings.STATIC_ROOT,
     "/static"
 )

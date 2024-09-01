@@ -28,11 +28,6 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 ALLOWED_HOSTS = []
 
-if ENVIRONMENT == "DEV":
-    # This is *only* for the development environment: "*" will match any host
-    ALLOWED_HOSTS.append("*")
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -89,14 +84,13 @@ DATABASES = {
     }
 }
 
-if ENVIRONMENT == "DEV":
-    # Set the path to the database file on the mounted file system (EFS)
-    # in the development environment
-    DATABASES['default']['NAME'] = os.path.join(
-        os.environ.get("MOUNTED_FILE_SYSTEM_PATH"),
-        "database",
-        "db.sqlite3"
-    )
+# Use file-based sessions
+SESSION_ENGINE = "django.contrib.sessions.backends.file"
+
+# If no SESSION_FILE_PATH set, the session files will be stored in tempfile.gettempdir(),
+# which most likely is `/tmp`
+# SESSION_FILE_PATH = None
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -151,11 +145,29 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-if ENVIRONMENT == "DEV":
-    # This path must also be set in asgi.py
-    STATIC_ROOT = os.path.join(os.environ.get("MOUNTED_FILE_SYSTEM_PATH"), "staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Settings for remote environments
+if ENVIRONMENT != "LOCAL":
+    # This is *only* for the development environment: "*" will match any host
+    ALLOWED_HOSTS.append("*")
+
+    # Path to EFS
+    MOUNTED_FILE_SYSTEM_PATH = Path(os.environ.get("MOUNTED_FILE_SYSTEM_PATH"))
+
+    # Static files directory on EFS
+    STATIC_ROOT = MOUNTED_FILE_SYSTEM_PATH / "staticfiles"
+
+    # SQLite file on EFS
+    DATABASES['default']['NAME'] = MOUNTED_FILE_SYSTEM_PATH / "database" / "db.sqlite3"
+
+    # Session files directory on EFS
+    SESSION_FILE_PATH = MOUNTED_FILE_SYSTEM_PATH / "session"
+
+    # Create the session files directory if it doesn't exist and set the permissions
+    SESSION_FILE_PATH.mkdir(parents=True, exist_ok=True, mode=0o750)
