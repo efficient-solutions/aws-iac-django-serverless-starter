@@ -175,6 +175,10 @@ This project is intended for development and testing purposes only. It is not su
 6. Django's secret key is set with SAM CLI and insecurely stored in an environment variable.
 7. Django's `ALLOWED_HOSTS` setting is configured with a wildcard, posing a security risk.
 
+## Production Use
+
+For those considering this architecture for production environments, we recommend exploring our [commercial version](https://efficient.solutions/aws-iac-django-serverless-basic/), which addresses all the limitations mentioned above.
+
 ## License
 
 This software is released under the [GNU GPLv3](LICENSE) license.
