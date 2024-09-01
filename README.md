@@ -39,7 +39,6 @@ The architecture consists of the following services:
 6. [AWS SAM](https://aws.amazon.com/serverless/sam/)
 7. [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/)
 
-
 ### Diagram
 
 ![Architectural diagram](./img/diagram.svg)
@@ -68,11 +67,13 @@ This serverless approach offers several benefits:
 
 ### Disadvantages
 
-This approach has notable limitations due to the use of SQLite and network-attached storage:
+This approach has notable drawbacks primarily due to the use of SQLite in conjunction with network-attached storage:
 
-1. Unsuitable for write-intensive workloads.
-2. High latency: even a simple application can experience latency over 150-200 milliseconds.
-3. Relatively slow cold start.
+1. Poor performance with write-intensive workloads: Write operations are sequential, meaning each new write request must wait for the previous one to complete, which can severely limit throughput.
+
+2. Relatively high latency: Even basic applications that perform database queries may experience latency exceeding 80 milliseconds with read requests and over 150 milliseconds with write requests.
+
+3. Relatively slow [cold start](https://docs.aws.amazon.com/lambda/latest/operatorguide/execution-environments.html): Initial startup takes over 1 second, which may affect responsiveness and user experience, especially in time-sensitive applications.
 
 ## Installation
 
