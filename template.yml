@@ -174,7 +174,7 @@ Resources:
         - Key: ResourceType
           Value: RouteTable
 
-  VpcSubnet0:  # First subnet for VPC
+  VpcSubnetA:  # First subnet for VPC
     Type: AWS::EC2::Subnet
     Properties:
       # Cidr function format: !Cidr [ipBlock, count, cidrBits]
@@ -194,7 +194,7 @@ Resources:
         - Key: ResourceType
           Value: Subnet
 
-  VpcSubnet1:  # Second subnet for VPC
+  VpcSubnetB:  # Second subnet for VPC
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Select [1, !Cidr [!Ref VpcCidrBlock, 3, 14]]
@@ -210,7 +210,7 @@ Resources:
         - Key: ResourceType
           Value: Subnet
 
-  VpcSubnet2:  # Third subnet for VPC
+  VpcSubnetC:  # Third subnet for VPC
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Select [2, !Cidr [!Ref VpcCidrBlock, 3, 14]]
@@ -226,22 +226,22 @@ Resources:
         - Key: ResourceType
           Value: Subnet
 
-  VpcSubnet0RouteTableAssociation:  # First subnet route table association
+  VpcSubnetARouteTableAssociation:  # First subnet route table association
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref VpcSubnet0
+      SubnetId: !Ref VpcSubnetA
       RouteTableId: !Ref VpcRouteTable
 
-  VpcSubnet1RouteTableAssociation:  # Second subnet route table association
+  VpcSubnetBRouteTableAssociation:  # Second subnet route table association
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref VpcSubnet1
+      SubnetId: !Ref VpcSubnetB
       RouteTableId: !Ref VpcRouteTable
 
-  VpcSubnet2RouteTableAssociation:  # Third subnet route table association"
+  VpcSubnetCRouteTableAssociation:  # Third subnet route table association"
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref VpcSubnet2
+      SubnetId: !Ref VpcSubnetC
       RouteTableId: !Ref VpcRouteTable
 
   FileSystem:  # EFS file system
@@ -273,27 +273,27 @@ Resources:
         - Key: ResourceType
           Value: FileSystem
 
-  FileSystemMountTarget0:  # First mount target for EFS
+  FileSystemMountTargetA:  # First mount target for EFS
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId: !Ref FileSystem
-      SubnetId: !Ref VpcSubnet0
+      SubnetId: !Ref VpcSubnetA
       SecurityGroups:
         - !GetAtt Vpc.DefaultSecurityGroup
 
-  FileSystemMountTarget1:  # Second mount target for EFS"
+  FileSystemMountTargetB:  # Second mount target for EFS"
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId: !Ref FileSystem
-      SubnetId: !Ref VpcSubnet1
+      SubnetId: !Ref VpcSubnetB
       SecurityGroups:
         - !GetAtt Vpc.DefaultSecurityGroup
 
-  FileSystemMountTarget2:  # Third mount target for EFS
+  FileSystemMountTargetC:  # Third mount target for EFS
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId: !Ref FileSystem
-      SubnetId: !Ref VpcSubnet2
+      SubnetId: !Ref VpcSubnetC
       SecurityGroups:
         - !GetAtt Vpc.DefaultSecurityGroup
 
@@ -303,9 +303,9 @@ Resources:
     # These dependencies can be added to the Lambda itself instead but it is easier
     # to manage them here in case of multiple Lambda functions.
     DependsOn:
-      - FileSystemMountTarget0
-      - FileSystemMountTarget1
-      - FileSystemMountTarget2
+      - FileSystemMountTargetA
+      - FileSystemMountTargetB
+      - FileSystemMountTargetC
     Properties:
       FileSystemId: !Ref FileSystem
       PosixUser:
@@ -490,9 +490,9 @@ Resources:
         # Use the !Split function to split a comma-separated string into an array
         SecurityGroupIds: !Split [",", !GetAtt Vpc.DefaultSecurityGroup]
         SubnetIds:
-          - !Ref VpcSubnet0
-          - !Ref VpcSubnet1
-          - !Ref VpcSubnet2
+          - !Ref VpcSubnetA
+          - !Ref VpcSubnetB
+          - !Ref VpcSubnetC
       FileSystemConfigs:
         - Arn: !GetAtt FileSystemAccessPoint.Arn
           LocalMountPath: !Ref LambdaMountedFileSystemPath
@@ -522,17 +522,17 @@ Outputs:
     Description: The CIDR block of the VPC
     Value: !Ref VpcCidrBlock
 
-  VpcSubnet0Id:
+  VpcSubnetAId:
     Description: The ID of the first subnet
-    Value: !Ref VpcSubnet0
+    Value: !Ref VpcSubnetA
 
-  VpcSubnet1Id:
+  VpcSubnetBId:
     Description: The ID of the second subnet  
-    Value: !Ref VpcSubnet1
+    Value: !Ref VpcSubnetB
 
-  VpcSubnet2Id:
+  VpcSubnetCId:
     Description: The ID of the third subnet
-    Value: !Ref VpcSubnet2
+    Value: !Ref VpcSubnetC
 
   FileSystemId:
     Description: The ID of the EFS file system
