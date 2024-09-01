@@ -16,9 +16,9 @@ This project demonstrates how to deploy a Django application utilizing a *fully*
 
 A basic Django polls application:
 
-- [Live Demo](https://s709p1zpcb.execute-api.us-east-1.amazonaws.com/)
-- [Admin Portal](https://s709p1zpcb.execute-api.us-east-1.amazonaws.com/admin/) (read-only)
-  - **Username:** admin
+- [Live Demo](https://cluf0ujerl.execute-api.us-east-1.amazonaws.com/)
+- [Admin Portal](https://cluf0ujerl.execute-api.us-east-1.amazonaws.com/admin/) (read-only)
+  - **Username:** demo
   - **Password:** djangoserverless
 
 ## Architecture
