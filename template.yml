@@ -108,14 +108,14 @@ Parameters:
   HttpApiRateLimit:
     Description: "Rate limit for HTTP API"
     Type: Number
-    Default: 10
+    Default: 1
     MinValue: 1
     MaxValue: 1000
 
   HttpApiBurstLimit:
     Description: "Burst limit for HTTP API"
     Type: Number
-    Default: 20
+    Default: 1
     MinValue: 1
     MaxValue: 1000
 
