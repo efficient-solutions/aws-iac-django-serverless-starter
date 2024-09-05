@@ -69,7 +69,7 @@ This serverless approach offers several benefits:
 
 This approach has notable drawbacks primarily due to the use of SQLite in conjunction with network-attached storage:
 
-1. Poor performance with write-intensive workloads: Write operations are sequential, meaning each new write request must wait for the previous one to complete, which can severely limit throughput.
+1. Lack of support for concurrent writes: SQLite relies on file locking for database consistency, but Amazon EFS only supports [advisory locking](https://docs.aws.amazon.com/efs/latest/ug/features.html#consistency). Since read/write operations don't check for conflicting locks before executing, concurrent writes can lead to database corruption. This makes the setup unsuitable for multi-writer scenarios.
 
 2. Relatively high latency: Even basic applications that perform database queries may experience latency exceeding 80 milliseconds with read requests and over 150 milliseconds with write requests.
 
@@ -167,13 +167,14 @@ sam delete
 
 This project is intended for development and testing purposes only. It is not suitable for production due to the following limitations:
 
-1. Static files are served by Lambda, which is slow, resource-intensive, and potentially costly.
-2. No option for handling media files.
-3. No option for adding a custom domain.
-4. No option for connecting to other AWS services or any external APIs from Lambda.
-5. The `/events` endpoint, which handles [non-HTTP events](https://github.com/awslabs/aws-lambda-web-adapter#non-http-event-triggers), is publicly accessible and unprotected.
-6. Django's secret key is set with SAM CLI and insecurely stored in an environment variable.
-7. Django's `ALLOWED_HOSTS` setting is configured with a wildcard, posing a security risk.
+1. Concurrent writes can lead to database corruption.
+2. Static files are served by Lambda, which is slow, resource-intensive, and potentially costly.
+3. No option for handling media files.
+4. No option for adding a custom domain.
+5. No option for connecting to other AWS services or any external APIs from Lambda.
+6. The `/events` endpoint, which handles [non-HTTP events](https://github.com/awslabs/aws-lambda-web-adapter#non-http-event-triggers), is publicly accessible and unprotected.
+7. Django's secret key is set with SAM CLI and insecurely stored in an environment variable.
+8. Django's `ALLOWED_HOSTS` setting is configured with a wildcard by default, posing a security risk.
 
 ## Production Use
 
