@@ -41,7 +41,7 @@ The architecture consists of the following services:
 
 ### Diagram
 
-![Architectural diagram](./img/diagram.svg)
+![Architectural diagram](./img/diagram.png)
 
 ### Database
 
