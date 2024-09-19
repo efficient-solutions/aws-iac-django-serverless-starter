@@ -17,12 +17,12 @@ ENV PYTHONUNBUFFERED=1
 
 # Install Python requirements
 COPY src/requirements.txt /tmp/pip-tmp/
-RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
+RUN pip3 install --upgrade --disable-pip-version-check --no-cache-dir -r /tmp/pip-tmp/requirements.txt \
     && rm -rf /tmp/pip-tmp
 
 # Install the latest version of cfn-lint which is needed in the local environment only
 # https://github.com/aws-cloudformation/cfn-lint-visual-studio-code
-RUN pip3 install --disable-pip-version-check --no-cache-dir cfn-lint
+RUN pip3 install --upgrade --disable-pip-version-check --no-cache-dir cfn-lint
 
 # Install boto3 in the local environment
 # RUN pip3 install --disable-pip-version-check --no-cache-dir "boto3==1.*"
