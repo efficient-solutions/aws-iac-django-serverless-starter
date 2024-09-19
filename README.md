@@ -14,7 +14,7 @@ This project demonstrates how to deploy a Django application utilizing a *fully*
 
 ## Demo
 
-A basic Django polls application:
+A simple Django polls application:
 
 - [Live Demo](https://cluf0ujerl.execute-api.us-east-1.amazonaws.com/)
 - [Admin Portal](https://cluf0ujerl.execute-api.us-east-1.amazonaws.com/admin/) (read-only)
@@ -23,13 +23,7 @@ A basic Django polls application:
 
 ## Architecture
 
-### Overview
-
-This project deploys a Django application in a serverless environment, leveraging various AWS services for seamless scalability and management.
-
-### Services
-
-The architecture consists of the following services:
+This solution uses the following AWS services:
 
 1. [AWS Lambda](https://aws.amazon.com/lambda/)
 2. [Amazon API Gateway](https://aws.amazon.com/api-gateway/)
@@ -39,7 +33,7 @@ The architecture consists of the following services:
 6. [AWS SAM](https://aws.amazon.com/serverless/sam/)
 7. [Amazon CloudWatch](https://aws.amazon.com/cloudwatch/)
 
-### Diagram
+### Overview
 
 ![Architectural diagram](./img/diagram.png)
 
@@ -74,6 +68,12 @@ This approach has notable drawbacks primarily due to the use of SQLite in conjun
 2. Relatively high latency: Even basic applications that perform database queries may experience latency exceeding 80 milliseconds with read requests and over 150 milliseconds with write requests.
 
 3. Relatively slow [cold start](https://docs.aws.amazon.com/lambda/latest/operatorguide/execution-environments.html): Initial startup takes over 1 second, which may affect responsiveness and user experience, especially in time-sensitive applications.
+
+### Supported Versions
+
+Python: 3.12
+
+Django: 5.1
 
 ## Installation
 
