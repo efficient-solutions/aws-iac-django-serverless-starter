@@ -172,9 +172,10 @@ This project is intended for development and testing purposes only. It is not su
 3. No option for handling media files.
 4. No option for adding a custom domain.
 5. No option for connecting to other AWS services or any external APIs from Lambda.
-6. The `/events` endpoint, which handles [non-HTTP events](https://github.com/awslabs/aws-lambda-web-adapter#non-http-event-triggers), is publicly accessible and unprotected.
-7. Django's secret key is set with SAM CLI and insecurely stored in an environment variable.
-8. Django's `ALLOWED_HOSTS` setting is configured with a wildcard by default, posing a security risk.
+6. No option for database backup.
+7. The `/events` endpoint, which handles [non-HTTP events](https://github.com/awslabs/aws-lambda-web-adapter#non-http-event-triggers), is publicly accessible and unprotected.
+8. Django's secret key is set with SAM CLI and insecurely stored in an environment variable.
+9. Django's `ALLOWED_HOSTS` setting is configured with a wildcard by default, posing a security risk.
 
 ## Production Use
 
