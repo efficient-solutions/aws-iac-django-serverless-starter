@@ -401,7 +401,11 @@ Resources:
                 Action:
                   - ec2:CreateNetworkInterface
                   - ec2:DescribeNetworkInterfaces
+                  - ec2:DescribeSubnets
                   - ec2:DeleteNetworkInterface
+                  - ec2:AttachNetworkInterface
+                  - ec2:AssignPrivateIpAddresses
+                  - ec2:UnassignPrivateIpAddresses
                 Resource: "*"
         - PolicyName: EfsPolicy
           PolicyDocument:
