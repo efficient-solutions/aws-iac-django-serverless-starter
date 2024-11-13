@@ -35,7 +35,7 @@ This solution uses the following AWS services:
 
 ### Overview
 
-![Architectural diagram](./img/diagram.png)
+![Architectural diagram](./assets/diagram.png)
 
 ### Database
 
