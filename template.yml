@@ -458,7 +458,7 @@ Resources:
         # Add the AWS Lambda Web Adapter layer with the corresponding architecture
         # https://github.com/awslabs/aws-lambda-web-adapter
         - !Sub 
-          - "arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayer${Architecture}:22"
+          - "arn:aws:lambda:${AWS::Region}:753240598075:layer:LambdaAdapterLayer${Architecture}:23"
           - Architecture: !FindInMap [FunctionMaps, WebAdapterLayerArchitecture, !Ref LambdaArchitecture]
       CodeUri: src/
       # The AWS Lambda Web Adapter wrapper script set in AWS_LAMBDA_EXEC_WRAPPER will execute
