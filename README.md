@@ -1,16 +1,17 @@
 # IaC Django Serverless Starter for AWS
 
-This project demonstrates how to deploy a Django application utilizing a *fully* serverless architecture on AWS. It uses AWS Lambda as the execution environment, SQLite as the database, and CloudFormation/SAM for infrastructure provisioning. The setup includes a local development environment using VS Code and Docker/Devcontainer. Please note that this project is intended for demonstration purposes and is not suitable for production use (see Limitations section).
+This project demonstrates how to deploy a Django application utilizing a *fully* serverless architecture on AWS. It uses AWS Lambda as the execution environment, SQLite as the database, and CloudFormation/SAM for infrastructure provisioning. The setup includes a local development environment using VS Code and Docker/Dev Containers. Please note that this project is intended for demonstration purposes and is not suitable for production use (see Limitations section).
 
 ## Table of Contents
 
 1. [Demo](#demo)
 2. [Architecture](#architecture)
 3. [Installation](#installation)
-4. [Usage](#usage)
-5. [Limitations](#limitations)
-6. [License](#license)
-7. [Disclaimer](#disclaimer)
+4. [Development Environment](#development-environment)
+5. [Usage](#usage)
+6. [Limitations](#limitations)
+7. [License](#license)
+8. [Disclaimer](#disclaimer)
 
 ## Demo
 
@@ -87,29 +88,55 @@ Ensure the following are installed and configured:
 4. [AWS Account](https://aws.amazon.com/)
 5. AWS Credentials ([Single-Sign On](https://aws.amazon.com/iam/identity-center/) or [Access Keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html))
 
-### Launch Locally
+## Development Environment
 
-1. Clone this repository:
+This project uses VS Code's [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) to provide a consistent and isolated development environment via Docker.
 
-```sh
-git clone https://github.com/efficient-solutions/aws-iac-django-serverless-starter.git
-```
+### Benefits
 
-2. Open the project in a Dev Container in VS Code.
+- **Environment Consistency**: All developers use the same environment configuration, reducing "it works on my machine" issues.
+- **Simplified Onboarding**: New developers can start quickly without manual setup of dependencies.
+- **Isolation**: Dependencies are containerized, avoiding conflicts with the host system.
+- **Portability**: The Dev Container configuration can be used across different platforms, ensuring a standardized setup.
 
-3. Apply the Django database migration by running the following command in the VS Code terminal:
+### Using Dev Containers
 
-```sh
-python src/manage.py migrate
-```
+1. **Install Prerequisites**:
+   - Install [Docker Desktop](https://www.docker.com/products/docker-desktop).
+   - Install [Visual Studio Code](https://code.visualstudio.com/).
+   - Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
 
-4. Create a superuser by running the following command in the VS Code terminal:
+2. **Open the Project in a Dev Container**:
+   - Clone the repository:
+     ```sh
+     git clone https://github.com/efficient-solutions/aws-iac-django-serverless-starter.git
+     ```
+   - Open the project folder in VS Code.
+   - Click **Reopen in Container** when prompted. VS Code will build and launch the Dev Container based on the configuration files in the `.devcontainer` folder.
 
-```sh
-python src/manage.py createsuperuser
-```
+3. **Access the Dev Container**:
+   - The integrated terminal in VS Code is connected to the Dev Container environment, pre-configured with Python, AWS CLI, and other necessary tools.
+   - Project files are mounted directly into the container, allowing seamless editing and debugging.
 
-5. Launch the Django application from the VS Code menu: `Run > Run Without Debugging`.
+4. **Running the Application**:
+   - Apply Django migrations:
+     ```sh
+     python src/manage.py migrate
+     ```
+   - Start the Django server:
+     ```sh
+     python src/manage.py runserver
+     ```
+
+### Customizing the Dev Container
+
+You can modify the Dev Container setup in `.devcontainer/devcontainer.json`, `.devcontainer/devcontainer.env`, and `.devcontainer/Dockerfile` to include additional tools, environment variables, or extensions.
+
+### Troubleshooting
+
+- **Container Build Issues**: Verify Docker is running with enough allocated resources (memory, CPU).
+- **Extension Problems**: Rebuild the container using the command palette (`Dev Containers: Rebuild Container`).
+- **Configuration Sync Issues**: If updates to the configuration are not reflected, rebuild the container to refresh the environment.
 
 ## Usage
 
@@ -117,43 +144,43 @@ python src/manage.py createsuperuser
 
 Before proceeding to the deployment, add your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-authentication.html) to the current environment. Then, execute the following commands in the VS Code terminal:
 
-#### 1. Build a deployment package
+1. Build a deployment package:
 
-```sh
-sam build
-```
+      ```sh
+      sam build
+      ```
 
-#### 2. Deploy the stack and the application
+2. Deploy the stack and the application:
 
-```sh
-sam deploy --guided
-```
+    ```sh
+    sam deploy --guided
+    ```
 
-#### 3. Apply the database migrations
+3. Apply the database migrations:
 
-```sh
-sam remote invoke Function --event '{"manage":"migrate"}' --stack-name aws-iac-django-serverless-starter
-```
+    ```sh
+    sam remote invoke Function --event '{"manage":"migrate"}' --stack-name aws-iac-django-serverless-starter
+    ```
 
-#### 4. Collect the static files
+4. Collect the static files:
 
-```sh
-sam remote invoke Function --event '{"manage":"collectstatic"}' --stack-name aws-iac-django-serverless-starter
-```
+    ```sh
+    sam remote invoke Function --event '{"manage":"collectstatic"}' --stack-name aws-iac-django-serverless-starter
+    ```
 
-#### 5. Create a superuser
+5. Create a superuser:
 
-```sh
-sam remote invoke Function --event '{"manage":"create_superuser"}' --stack-name aws-iac-django-serverless-starter
-```
+    ```sh
+    sam remote invoke Function --event '{"manage":"create_superuser"}' --stack-name aws-iac-django-serverless-starter
+    ```
 
-> This command creates a superuser `root` with a randomly-generated password which is returned in the output. Change this password once you log in. Also, this command can only be run once.
+    > **Important**: This command creates a superuser `root` with a randomly-generated password which is returned in the output. Change this password once you log in. Also, this command can only be run once.
 
 ### Launch Remotely
 
 After successfully deploying, you will receive an `HttpApiUrl` output. Open this URL in your browser.
 
-> Due to the limitations of static serving from the Lambda function, it may take several minutes after running the `collectstatic` command before all static files are available. During this time, you may encounter occasional HTTP 404 errors.
+> **Note:** Due to the limitations of static serving from the Lambda function, it may take several minutes after running the `collectstatic` command before all static files are available. During this time, you may encounter occasional HTTP 404 errors.
 
 ### Clean Up
 
