@@ -119,14 +119,16 @@ This project uses VS Code's [Dev Containers extension](https://marketplace.visua
    - Project files are mounted directly into the container, allowing seamless editing and debugging.
 
 4. **Running the Application**:
-   - Apply Django migrations:
+   - Apply migrations:
      ```sh
      python src/manage.py migrate
      ```
-   - Start the Django server:
+   - Create a superuser:
      ```sh
-     python src/manage.py runserver
+     python src/manage.py createsuperuser
      ```
+   - Start the Django server from the VS Code menu:  
+     Go to **Run > Run Without Debugging**.
 
 ### Customizing the Dev Container
 
