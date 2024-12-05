@@ -1,4 +1,4 @@
-# IaC Django Serverless Starter for AWS
+# IaC Serverless Django SQLite PoC for AWS
 
 This project demonstrates how to deploy a Django application utilizing a *fully* serverless architecture on AWS. It uses AWS Lambda as the execution environment, SQLite as the database, and CloudFormation/SAM for infrastructure provisioning. The setup includes a local development environment using VS Code and Docker/Dev Containers. Please note that this project is intended for demonstration purposes and is not suitable for production use (see Limitations section).
 
@@ -109,7 +109,7 @@ This project uses VS Code's [Dev Containers extension](https://marketplace.visua
 2. **Open the Project in a Dev Container**:
    - Clone the repository:
      ```sh
-     git clone https://github.com/efficient-solutions/aws-iac-django-serverless-starter.git
+     git clone https://github.com/efficient-solutions/aws-iac-serverless-django-sqlite-poc.git
      ```
    - Open the project folder in VS Code.
    - Click **Reopen in Container** when prompted. VS Code will build and launch the Dev Container based on the configuration files in the `.devcontainer` folder.
@@ -161,19 +161,19 @@ Before proceeding to the deployment, add your [AWS credentials](https://docs.aws
 3. Apply the database migrations:
 
     ```sh
-    sam remote invoke Function --event '{"manage":"migrate"}' --stack-name aws-iac-django-serverless-starter
+    sam remote invoke Function --event '{"manage":"migrate"}' --stack-name aws-iac-serverless-django-sqlite-poc
     ```
 
 4. Collect the static files:
 
     ```sh
-    sam remote invoke Function --event '{"manage":"collectstatic"}' --stack-name aws-iac-django-serverless-starter
+    sam remote invoke Function --event '{"manage":"collectstatic"}' --stack-name aws-iac-serverless-django-sqlite-poc
     ```
 
 5. Create a superuser:
 
     ```sh
-    sam remote invoke Function --event '{"manage":"create_superuser"}' --stack-name aws-iac-django-serverless-starter
+    sam remote invoke Function --event '{"manage":"create_superuser"}' --stack-name aws-iac-serverless-django-sqlite-poc
     ```
 
     > **Important**: This command creates a superuser `root` with a randomly-generated password which is returned in the output. Change this password once you log in. Also, this command can only be run once.
@@ -208,7 +208,7 @@ This project is intended for development and testing purposes only. It is not su
 
 ## Production Use
 
-For those considering this architecture for production environments, we recommend exploring our [commercial version](https://efficient.solutions/aws-iac-django-serverless-basic/), which addresses all the limitations mentioned above.
+For those considering this architecture for production environments, we recommend exploring our [commercial version](https://efficient.solutions/aws-iac-serverless-django-sqlite/), which addresses all the limitations mentioned above.
 
 ## License
 

@@ -1,8 +1,8 @@
-# IaC Django Serverless Starter for AWS
+# IaC Serverless Django SQLite PoC for AWS
 # Copyright (C) 2024 Efficient Solutions LLC
 #
 # GitHub Repository
-# https://github.com/efficient-solutions/aws-iac-django-serverless-starter
+# https://github.com/efficient-solutions/aws-iac-serverless-django-sqlite-poc
 #
 # This software is released under the GNU GPLv3 license
 # https://www.gnu.org/licenses/gpl-3.0.html
@@ -18,7 +18,7 @@ Parameters:
   ProjectId:
     Description: ID of the project used for resource identification and tagging
     Type: String
-    Default: aws-iac-django-serverless-starter
+    Default: aws-iac-serverless-django-sqlite-poc
     AllowedPattern: ^[a-zA-Z0-9-]+$
     ConstraintDescription: Project name must contain only letters, numbers, and hyphens
 

@@ -1,7 +1,7 @@
 // Format details: https://aka.ms/devcontainer.json
 // For config options: https://github.com/devcontainers/templates/tree/main/src/python
 {
-	"name": "aws-iac-django-serverless-starter",
+	"name": "aws-iac-serverless-django-sqlite-poc",
 
 	// Use a Dockerfile; more info: https://containers.dev/guide/dockerfile
 	"build": {
