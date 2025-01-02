@@ -17,8 +17,8 @@ This project demonstrates how to deploy a Django application utilizing a *fully*
 
 A simple Django polls application:
 
-- [Live Demo](https://efficient.solutions/link/ukjbh/)
-- [Admin Portal](https://efficient.solutions/link/knjpj/) (read-only)
+- [Live Demo](https://efficientsolutions.xyz/link/ukjbh/)
+- [Admin Portal](https://efficientsolutions.xyz/link/knjpj/) (read-only)
   - **Username:** demo
   - **Password:** djangoserverless
 
@@ -208,7 +208,7 @@ This project is intended for development and testing purposes only. It is not su
 
 ## Production Use
 
-For those considering this architecture for production environments, we recommend exploring our [commercial version](https://efficient.solutions/aws-iac-serverless-django-sqlite/), which addresses all the limitations mentioned above.
+For those considering this architecture for production environments, we recommend exploring our [commercial version](https://efficientsolutions.xyz/aws-iac-serverless-django-sqlite/), which addresses all the limitations mentioned above.
 
 ## License
 
